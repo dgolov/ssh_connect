@@ -1,5 +1,7 @@
 import asyncio
 import asyncssh
+import json
+import re
 
 
 async def connect(host_name: str, username: str, secret: str, command: str, port: int = 22) -> tuple:
@@ -11,23 +13,45 @@ async def connect(host_name: str, username: str, secret: str, command: str, port
     :param port: ssh port
     :return: host_name + command result
     """
-    async with asyncssh.connect(host=host_name, username=username, password=secret, port=port) as conn:
+    print(f"[#] Connect to {host_name}")
+    try:
+        conn = await asyncio.wait_for(
+            asyncssh.connect(host=host_name, username=username, password=secret, port=port),
+            timeout=10
+        )
+        print(f"[#] Connect to {host_name} - Successfully")
+    except asyncio.TimeoutError:
+        print(f"[#] Connect to {host_name} - Timeout Error")
+        return None, None
+    async with conn:
         result = await conn.run(command, check=True)
     return host_name, result.stdout
 
 
-async def main():
-    host = ''
-    user = ''
-    password = ''
-    host2 = ''
-    user2 = ''
-    password2 = ''
+async def main(hosts: dict):
+    tasks_list = []
+    for host, values in hosts.items():
+        username = values.get("user")
+        password = values.get("password")
+        port = values.get("port", 22)
+        command = values.get("command")
 
-    task1 = connect(host, user, password, 'docker -v', 222)
-    task2 = connect(host2, user2, password2, 'docker -v', 222)
-    tasks_result = await asyncio.gather(task1, task2)
-    print(tasks_result)
+        if not re.search(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", host) \
+                or (not username or not password or not command):
+            continue
+        tasks_list.append(connect(host, username, password, command, port))
+
+    tasks_result = await asyncio.gather(*tasks_list)
+    with open('result.txt', 'w', encoding='utf-8') as out_file:
+        for result in tasks_result:
+            if not result[0]:
+                continue
+            line = f"{result[0]}: {result[1]}"
+            if not line.endswith('\n'):
+                line += '\n'
+            out_file.write(line)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    with open('hosts.json', 'r') as json_file:
+        load_hosts = json.load(json_file)
+    asyncio.run(main(hosts=load_hosts))
