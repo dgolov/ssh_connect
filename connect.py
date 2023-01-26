@@ -3,6 +3,8 @@ import asyncssh
 import json
 import re
 
+from typing import Union, Any
+
 
 async def connect(host_name: str, username: str, secret: str, command: str, port: int = 22) -> tuple:
     """ Connect to server and run command
@@ -23,13 +25,36 @@ async def connect(host_name: str, username: str, secret: str, command: str, port
     except asyncio.TimeoutError:
         print(f"[#] Connect to {host_name} - Timeout Error")
         return None, None
+
     async with conn:
         result = await conn.run(command, check=True)
     return host_name, result.stdout
 
 
-async def main(hosts: dict):
+def create_out_file(stdout_results: Union[list, Any]) -> None:
+    """ Creating result file
+        format -  host: stdout
+    :param stdout_results: tasks result
+    :return: None
+    """
+    with open('result.txt', 'w', encoding='utf-8') as out_file:
+        for result in stdout_results:
+            if not result[0]:
+                continue
+            line = f"{result[0]}: {result[1]}"
+            if not line.endswith('\n'):
+                line += '\n'
+            out_file.write(line)
+
+
+async def main(hosts: dict) -> None:
+    """ Main function
+    :param hosts: host from json file
+    :return: None
+    """
+    print("[#] Start application")
     tasks_list = []
+
     for host, values in hosts.items():
         username = values.get("user")
         password = values.get("password")
@@ -42,14 +67,10 @@ async def main(hosts: dict):
         tasks_list.append(connect(host, username, password, command, port))
 
     tasks_result = await asyncio.gather(*tasks_list)
-    with open('result.txt', 'w', encoding='utf-8') as out_file:
-        for result in tasks_result:
-            if not result[0]:
-                continue
-            line = f"{result[0]}: {result[1]}"
-            if not line.endswith('\n'):
-                line += '\n'
-            out_file.write(line)
+    create_out_file(stdout_results=tasks_result)
+
+    print("[#] End")
+
 
 if __name__ == '__main__':
     with open('hosts.json', 'r') as json_file:
