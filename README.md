@@ -14,6 +14,11 @@
 python3 -m venv venv
 . /venv/bin/activate OR /venv/Scripts/activate.bat (For Windows)
 pip install -r requirements.txt
+```
+
+Add host.json
+
+```
 python connect.py
 ```
 
