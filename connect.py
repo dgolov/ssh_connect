@@ -6,20 +6,21 @@ import re
 from typing import Union, Any
 
 
-async def connect(host_name: str, username: str, secret: str, command: str, port: int = 22) -> tuple:
+async def connect(host_name: str, username: str, secret: str, command: str, port: int = 22, timeout: int = 5) -> tuple:
     """ Connect to server and run command
     :param host_name: 192.168.1.1 (For example)
     :param username: user
     :param secret: password
     :param command: docker -v
     :param port: ssh port
+    :param timeout: ssh timeout
     :return: host_name + command result
     """
     print(f"[#] Connect to {host_name}")
     try:
         conn = await asyncio.wait_for(
             asyncssh.connect(host=host_name, username=username, password=secret, port=port),
-            timeout=10
+            timeout=timeout
         )
         print(f"[#] Connect to {host_name} - Successfully")
     except asyncio.TimeoutError:
