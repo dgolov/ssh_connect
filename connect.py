@@ -25,6 +25,9 @@ async def connect(host_name: str, username: str, secret: str, command: str, port
     except asyncio.TimeoutError:
         print(f"[#] Connect to {host_name} - Timeout Error")
         return None, None
+    except asyncssh.misc.PermissionDenied:
+        print(f"[#] Connect to {host_name} - Permission denied")
+        return None, None
 
     async with conn:
         result = await conn.run(command, check=True)
