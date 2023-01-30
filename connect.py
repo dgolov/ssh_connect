@@ -38,7 +38,6 @@ def create_out_file(stdout_results: Union[list, Any]) -> None:
     """ Creating result file
         format -  host: stdout
     :param stdout_results: tasks result
-    :return: None
     """
     with open('result.txt', 'w', encoding='utf-8') as out_file:
         for result in stdout_results:
