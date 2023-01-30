@@ -23,15 +23,17 @@ async def connect(host_name: str, username: str, secret: str, command: str, port
         )
         print(f"[#] Connect to {host_name} - Successfully")
     except asyncio.TimeoutError:
-        print(f"[#] Connect to {host_name} - Timeout Error")
-        return None, None
+        stdout = "Timeout Error"
+        print(f"[#] Connect to {host_name} - {stdout}")
     except asyncssh.misc.PermissionDenied:
-        print(f"[#] Connect to {host_name} - Permission denied")
-        return None, None
+        stdout = "Permission denied"
+        print(f"[#] Connect to {host_name} - {stdout}")
+    else:
+        async with conn:
+            result = await conn.run(command, check=True)
+            stdout = result.stdout
 
-    async with conn:
-        result = await conn.run(command, check=True)
-    return host_name, result.stdout
+    return host_name, stdout
 
 
 def create_out_file(stdout_results: Union[list, Any]) -> None:
@@ -52,7 +54,6 @@ def create_out_file(stdout_results: Union[list, Any]) -> None:
 async def main(hosts: dict) -> None:
     """ Main function
     :param hosts: host from json file
-    :return: None
     """
     print("[#] Start application")
     tasks_list = []
