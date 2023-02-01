@@ -3,6 +3,7 @@ import asyncssh
 import json
 import re
 
+from logging_config import logger
 from typing import Union, Any
 
 
@@ -20,7 +21,7 @@ async def connect(
     :param key_path: ssh key path
     :return: host_name + command result
     """
-    print(f"[#] Connect to {host_name}")
+    logger.info(f"Connect to {host_name}")
 
     if isinstance(key_path, str):
         client_keys = [key_path]
@@ -34,13 +35,16 @@ async def connect(
             asyncssh.connect(host=host_name, username=username, password=secret, port=port, client_keys=client_keys),
             timeout=timeout
         )
-        print(f"[#] Connect to {host_name} - Successfully")
+        logger.info(f"Connect to {host_name} - Successfully")
     except asyncio.TimeoutError:
-        stdout = "Timeout Error"
-        print(f"[#] Connect to {host_name} - {stdout}")
+        stdout = "Timeout error"
+        logger.warning(f"Connect to {host_name} - {stdout}")
     except asyncssh.misc.PermissionDenied:
-        stdout = "Permission denied"
-        print(f"[#] Connect to {host_name} - {stdout}")
+        stdout = "Permission denied error"
+        logger.warning(f"Connect to {host_name} - {stdout}")
+    except Exception as e:
+        stdout = "Unknown error"
+        logger.error(f"Connect to {host_name} - {stdout}: {e}")
     else:
         async with conn:
             result = await conn.run(command, check=True)
@@ -69,7 +73,7 @@ async def main(hosts: dict) -> None:
     """ Main function
     :param hosts: host from json file
     """
-    print("[#] Start application")
+    logger.debug("Start application")
     tasks_list = []
 
     for host, values in hosts.items():
@@ -94,7 +98,7 @@ async def main(hosts: dict) -> None:
     tasks_result = await asyncio.gather(*tasks_list)
     create_out_file(stdout_results=tasks_result)
 
-    print("[#] End")
+    logger.debug("End")
 
 
 if __name__ == '__main__':

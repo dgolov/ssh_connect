@@ -3,3 +3,5 @@
 .idea
 hosts.json
 result.txt
+/*.log
+/app.log
