@@ -44,9 +44,10 @@ def create_out_file(stdout_results: Union[list, Any]) -> None:
     """
     with open('result.txt', 'w', encoding='utf-8') as out_file:
         for result in stdout_results:
-            if not result[0]:
+            host, stdout = result
+            if not host:
                 continue
-            line = f"{result[0]}: {result[1]}"
+            line = f"{host}: {stdout}"
             if not line.endswith('\n'):
                 line += '\n'
             out_file.write(line)
