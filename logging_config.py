@@ -9,7 +9,7 @@ log_config = {
             "datefmt": '%d-%b-%y %H:%M:%S',
         },
         "trace_formatter": {
-            "format": '%(asctime)s - %(message)s',
+            "format": '[#] %(asctime)s - %(message)s',
             "datefmt": '%d-%b-%y %H:%M:%S',
         },
     },
