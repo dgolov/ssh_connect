@@ -6,7 +6,10 @@ import re
 from typing import Union, Any
 
 
-async def connect(host_name: str, username: str, secret: str, command: str, port: int = 22, timeout: int = 5) -> tuple:
+async def connect(
+        host_name: str, username: str, secret: str, command: str, port: int = 22, timeout: int = 5,
+        key_path: Union[str, list] = None
+) -> tuple:
     """ Connect to server and run command
     :param host_name: 192.168.1.1 (For example)
     :param username: user
@@ -14,12 +17,21 @@ async def connect(host_name: str, username: str, secret: str, command: str, port
     :param command: docker -v
     :param port: ssh port
     :param timeout: ssh timeout
+    :param key_path: ssh key path
     :return: host_name + command result
     """
     print(f"[#] Connect to {host_name}")
+
+    if isinstance(key_path, str):
+        client_keys = [key_path]
+    elif isinstance(key_path, list) or not key_path:
+        client_keys = key_path
+    else:
+        return host_name, 'Key path error'
+
     try:
         conn = await asyncio.wait_for(
-            asyncssh.connect(host=host_name, username=username, password=secret, port=port),
+            asyncssh.connect(host=host_name, username=username, password=secret, port=port, client_keys=client_keys),
             timeout=timeout
         )
         print(f"[#] Connect to {host_name} - Successfully")
@@ -63,13 +75,21 @@ async def main(hosts: dict) -> None:
     for host, values in hosts.items():
         username = values.get("user")
         password = values.get("password")
-        port = values.get("port", 22)
         command = values.get("command")
 
         if not re.search(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", host) \
                 or (not username or not password or not command):
             continue
-        tasks_list.append(connect(host, username, password, command, port))
+        tasks_list.append(
+            connect(
+                host_name=host,
+                username=username,
+                secret=password,
+                command=command,
+                port=values.get("port", 22),
+                key_path=values.get("ssh_path")
+            )
+        )
 
     tasks_result = await asyncio.gather(*tasks_list)
     create_out_file(stdout_results=tasks_result)
