@@ -1,12 +1,12 @@
 {
   "109.172.27.159": {
-    "user": "sv01",
-    "password": "34993499",
+    "user": "username",
+    "password": "password",
     "port": 222,
     "command": "docker -v"
   },
   "10.172.27.159": {
-    "user": "sv01",
+    "user": "usernsme",
     "ssh_path": "/path/.ssh/id_rsa.pub",
     "port": 222,
     "command": "docker -v"
